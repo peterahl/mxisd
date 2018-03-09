@@ -58,6 +58,7 @@ public class AuthManager {
                 continue;
             }
 
+            log.info("Attempting auth with " + provider.getClass().getSimpleName());
             BackendAuthResult result = provider.authenticate(mxid, password);
             if (result.isSuccess()) {
 
