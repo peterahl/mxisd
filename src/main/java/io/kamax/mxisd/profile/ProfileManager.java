@@ -31,16 +31,22 @@ import java.util.stream.Collectors;
 @Component
 public class ProfileManager {
 
-    private List<ProfileProvider> providers;
+    private List<ProfileProvider> readers;
+    private List<ProfileWriter> writers;
 
-    public ProfileManager(List<ProfileProvider> providers) {
-        this.providers = providers.stream().filter(ProfileProvider::isEnabled).collect(Collectors.toList());
+    public ProfileManager(List<ProfileProvider> providers, List<ProfileWriter> writers) {
+        this.readers = providers.stream().filter(ProfileProvider::isEnabled).collect(Collectors.toList());
+        this.writers = writers.stream().filter(ProfileWriter::isEnabled).collect(Collectors.toList());
     }
 
     public List<ThreePid> getThreepids(_MatrixID mxid) {
         List<ThreePid> threepids = new ArrayList<>();
-        providers.forEach(p -> threepids.addAll(p.getThreepids(mxid)));
+        readers.forEach(p -> threepids.addAll(p.getThreepids(mxid)));
         return threepids;
+    }
+
+    public void addThreepid(_MatrixID mxid, ThreePid tpid) {
+        writers.forEach(w -> w.addThreepid(mxid, tpid));
     }
 
 }
