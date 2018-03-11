@@ -141,6 +141,7 @@ public class EmailSendGridConfig {
         }
 
         private EmailTemplate invite = new EmailTemplate();
+        private EmailTemplate inviteByMxid = new EmailTemplate();
         private TemplateSession session = new TemplateSession();
 
         public EmailTemplate getInvite() {
@@ -149,6 +150,14 @@ public class EmailSendGridConfig {
 
         public void setInvite(EmailTemplate invite) {
             this.invite = invite;
+        }
+
+        public EmailTemplate getInviteByMxid() {
+            return inviteByMxid;
+        }
+
+        public void setInviteByMxid(EmailTemplate inviteByMxid) {
+            this.inviteByMxid = inviteByMxid;
         }
 
         public TemplateSession getSession() {

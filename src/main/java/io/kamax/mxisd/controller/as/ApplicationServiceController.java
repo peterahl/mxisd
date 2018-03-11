@@ -24,6 +24,8 @@ import com.google.gson.JsonObject;
 import io.kamax.matrix.json.GsonUtil;
 import io.kamax.mxisd.invitation.MxidRoomInvitationNotifier;
 import io.kamax.mxisd.util.GsonParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +42,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 @CrossOrigin
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class ApplicationServiceController {
+
+    private final Logger log = LoggerFactory.getLogger(ApplicationServiceController.class);
 
     private final String notFoundBody;
     private final GsonParser parser;
@@ -70,6 +74,7 @@ public class ApplicationServiceController {
             @RequestParam(name = "access_token", required = false) String accessToken,
             @PathVariable String txnId) {
         try {
+            log.info("Processing transaction {}", txnId);
             List<JsonObject> events = GsonUtil.asList(GsonUtil.getArray(parser.parse(request.getInputStream()), "events"), JsonObject.class);
             notifier.processTransaction(accessToken, events);
             return "{}";

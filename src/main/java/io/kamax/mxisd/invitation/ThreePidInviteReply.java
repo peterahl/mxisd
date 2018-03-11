@@ -22,16 +22,28 @@ package io.kamax.mxisd.invitation;
 
 public class ThreePidInviteReply implements IThreePidInviteReply {
 
+    private boolean isForMxid;
     private String id;
     private IThreePidInvite invite;
     private String token;
     private String displayName;
+
+    public ThreePidInviteReply(IThreePidInvite invite) {
+        this.invite = invite;
+        this.isForMxid = true;
+    }
 
     public ThreePidInviteReply(String id, IThreePidInvite invite, String token, String displayName) {
         this.id = id;
         this.invite = invite;
         this.token = token;
         this.displayName = displayName;
+        this.isForMxid = false;
+    }
+
+    @Override
+    public boolean isForMxid() {
+        return isForMxid;
     }
 
     @Override

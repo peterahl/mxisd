@@ -72,6 +72,7 @@ public class GenericTemplateConfig {
     }
 
     private String invite;
+    private String inviteByMxid;
     private Session session = new Session();
 
     public String getInvite() {
@@ -80,6 +81,14 @@ public class GenericTemplateConfig {
 
     public void setInvite(String invite) {
         this.invite = invite;
+    }
+
+    public String getInviteByMxid() {
+        return inviteByMxid;
+    }
+
+    public void setInviteByMxid(String inviteByMxid) {
+        this.inviteByMxid = inviteByMxid;
     }
 
     public Session getSession() {

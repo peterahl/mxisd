@@ -191,6 +191,7 @@ threepid:
       generators:
         template:
           invite: 'classpath:threepids/email/invite-template.eml'
+          inviteByMxid: 'classpath:threepids/email/invite-mxid-template.eml'
           session:
             validation:
               local: 'classpath:threepids/email/validate-local-template.eml'
@@ -207,6 +208,7 @@ threepid:
       generators:
         template:
           invite: 'classpath:threepids/sms/invite-template.txt'
+          inviteByMxid: 'classpath:threepids/sms/invite-mxid-template.txt'
           session:
             validation:
               local: 'classpath:threepids/sms/validate-local-template.txt'

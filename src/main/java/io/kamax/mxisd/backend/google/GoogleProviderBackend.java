@@ -93,8 +93,6 @@ public class GoogleProviderBackend implements AuthenticatorProvider {
 
     @Override
     public BackendAuthResult authenticate(_MatrixID mxid, String password) {
-        BackendAuthResult result = new BackendAuthResult();
-
         try {
             return extractToken(password).map(idToken -> {
                 GoogleIdToken.Payload payload = idToken.getPayload();
@@ -109,9 +107,10 @@ public class GoogleProviderBackend implements AuthenticatorProvider {
                 return lookup.find("io.kamax.google.id", userId, false).map(r -> {
 
                     if (!r.getMxid().equals(mxid)) {
-                        return result.fail();
+                        return BackendAuthResult.failure();
                     }
 
+                    BackendAuthResult result = new BackendAuthResult();
                     // Get profile information from payload
                     extractThreepids(idToken).forEach(result::withThreePid);
                     String name = (String) payload.get("name");
@@ -127,7 +126,7 @@ public class GoogleProviderBackend implements AuthenticatorProvider {
             throw new RuntimeException(e);
         } catch (IOException e) {
             log.error("Unable to authenticate via Google due to network error", e);
-            return result.fail();
+            return BackendAuthResult.failure();
         }
     }
 

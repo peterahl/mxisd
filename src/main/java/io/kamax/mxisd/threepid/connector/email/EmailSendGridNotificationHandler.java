@@ -88,7 +88,7 @@ public class EmailSendGridNotificationHandler extends PlaceholderNotificationGen
 
     @Override
     public void sendForInvite(IThreePidInviteReply invite) {
-        EmailTemplate template = cfg.getTemplates().getInvite();
+        EmailTemplate template = invite.isForMxid() ? cfg.getTemplates().getInviteByMxid() : cfg.getTemplates().getInvite();
         Email email = getEmail();
         email.setSubject(populateForInvite(invite, template.getSubject()));
         email.setText(populateForInvite(invite, getFromFile(template.getBody().getText())));

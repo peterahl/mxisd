@@ -23,16 +23,13 @@ package io.kamax.mxisd.invitation;
 import com.google.gson.JsonObject;
 import io.kamax.matrix.MatrixID;
 import io.kamax.matrix._MatrixID;
-import io.kamax.matrix.client.MatrixClientContext;
-import io.kamax.matrix.client.MatrixClientRequestException;
-import io.kamax.matrix.client.PresenceStatus;
-import io.kamax.matrix.client.as.MatrixApplicationServiceClient;
-import io.kamax.matrix.client.as._MatrixApplicationServiceClient;
 import io.kamax.matrix.event.EventKey;
 import io.kamax.matrix.json.GsonUtil;
 import io.kamax.mxisd.config.ListenerConfig;
 import io.kamax.mxisd.config.MatrixConfig;
 import io.kamax.mxisd.exception.MatrixException;
+import io.kamax.mxisd.notification.NotificationManager;
+import io.kamax.mxisd.profile.ProfileManager;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Objects;
 
 @Component
 public class MxidRoomInvitationNotifier {
@@ -49,28 +45,15 @@ public class MxidRoomInvitationNotifier {
 
     private ListenerConfig cfg;
     private MatrixConfig mxCfg;
-    private _MatrixApplicationServiceClient mxClient;
+    private ProfileManager profiler;
+    private NotificationManager notif;
 
     @Autowired
-    public MxidRoomInvitationNotifier(ListenerConfig cfg, MatrixConfig mxCfg) {
+    public MxidRoomInvitationNotifier(ListenerConfig cfg, MatrixConfig mxCfg, ProfileManager profiler, NotificationManager notif) {
         this.cfg = cfg;
         this.mxCfg = mxCfg;
-
-        init();
-    }
-
-    private void init() {
-        if (Objects.isNull(cfg.getUrl())) {
-            return;
-        }
-
-        MatrixClientContext context = new MatrixClientContext()
-                .setDomain(mxCfg.getDomain())
-                .setHsBaseUrl(cfg.getUrl())
-                .setToken(cfg.getToken().getAs())
-                .setUserWithLocalpart(cfg.getLocalpart());
-        mxClient = new MatrixApplicationServiceClient(context);
-        mxClient.getUser(MatrixID.from(cfg.getLocalpart(), mxCfg.getDomain()).acceptable()).getName();
+        this.profiler = profiler;
+        this.notif = notif;
     }
 
     public void processTransaction(String token, List<JsonObject> eventsJson) {
@@ -91,20 +74,25 @@ public class MxidRoomInvitationNotifier {
                 return;
             }
 
+            String roomId = GsonUtil.getStringOrNull(ev, "room_id");
+            _MatrixID sender = MatrixID.from(GsonUtil.getStringOrNull(ev, "sender")).acceptable();
             EventKey.StateKey.findString(ev).ifPresent(id -> {
+                log.info("Got invite for {}", id);
                 _MatrixID mxid = MatrixID.from(id).acceptable();
-                log.info("Got invite for {}", mxid.getId());
-                try {
-                    mxClient.getUser(mxid).getPresence().ifPresent(p -> {
-                        if (!PresenceStatus.Online.is(p.getStatus())) {
-                            log.info("Found offline user, sending notification");
-                        }
-                    });
-                } catch (MatrixClientRequestException e) {
-                    e.getError().ifPresent(err -> {
-                        log.info("{} - {}", err.getErrcode(), err.getError());
-                    });
+                if (!StringUtils.equals(mxid.getDomain(), mxCfg.getDomain())) {
+                    log.info("Ignoring invite for {}: not a local user");
+                    return;
                 }
+
+                profiler.getThreepids(mxid).forEach(tpid -> {
+                    if (!StringUtils.equals("email", tpid.getMedium())) {
+                        return;
+                    }
+
+                    log.info("Found an email address to notify about room invitation: {}", tpid.getAddress());
+                    ThreePidInvite inv = new ThreePidInvite(sender, tpid.getMedium(), tpid.getAddress(), roomId);
+                    notif.sendForInvite(new ThreePidInviteReply(inv));
+                });
             });
         });
     }
